@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Encuentra los corazones</title>
+<style>
+  body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto; background:#06121a; color:#eaf6ff; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:28px; }
+  .playground{ position:relative; width:90%; max-width:900px; height:420px; background:linear-gradient(180deg,#071a2b,#051022); border-radius:12px; overflow:hidden; box-shadow:0 12px 40px rgba(2,6,23,0.6); }
+  .hud{ margin-top:12px; display:flex; gap:12px; align-items:center; }
+  .btn{ padding:8px 12px; border-radius:8px; background:#ff8fa3; border:none; cursor:pointer; color:#071122; font-weight:800; }
+  .heart{ position:absolute; width:56px; height:56px; display:grid; place-items:center; cursor:pointer; user-select:none; transform:scale(0.9); transition:transform 140ms; }
+  .heart:active{ transform:scale(0.78); }
+  .score{ font-weight:700; }
+  .final{ margin-top:16px; display:none; background:rgba(255,255,255,0.03); padding:14px; border-radius:8px; }
+</style>
+</head>
+<body>
+<h1>Encuentra los corazones 💘</h1>
+<div class="playground" id="playground"></div>
+<div class="hud">
+  <div class="score">Puntos: <span id="points">0</span></div>
+  <div>Tiempo: <span id="time">20</span>s</div>
+  <button class="btn" id="start">Iniciar juego</button>
+</div>
+<div class="final" id="final"></div>
+
+<script>
+const pg = document.getElementById('playground');
+const start = document.getElementById('start');
+const pointsEl = document.getElementById('points');
+const timeEl = document.getElementById('time');
+const final = document.getElementById('final');
+
+let timer = null, timeLeft=20, points=0, spawnInterval=null;
+
+function spawnHeart(){
+  const h = document.createElement('div');
+  h.className = 'heart';
+  h.innerHTML = '❤';
+  const w = pg.clientWidth - 60;
+  const hgt = pg.clientHeight - 60;
+  const x = Math.random()*w;
+  const y = Math.random()*hgt;
+  h.style.left = x + 'px';
+  h.style.top = y + 'px';
+  h.style.fontSize = (28 + Math.floor(Math.random()*26)) + 'px';
+  const value = Math.random() < 0.25 ? 3 : 1; // algunos valen más
+  h.dataset.val = value;
+  h.title = value + ' puntos';
+  pg.appendChild(h);
+  // desaparece solo
+  setTimeout(()=> { if (h.parentNode) h.remove(); }, 1800 + Math.random()*1800);
+  h.addEventListener('click', ()=> {
+    points += Number(h.dataset.val);
+    pointsEl.textContent = points;
+    h.remove();
+    const pop = document.createElement('div');
+    pop.style.position='absolute';
+    pop.style.left=h.style.left; pop.style.top=h.style.top;
+    pop.style.pointerEvents='none';
+    pop.style.fontSize='16px';
+    pop.style.color='#ffe7ea';
+    pop.textContent = '+'+h.dataset.val;
+    pg.appendChild(pop);
+    setTimeout(()=> pop.remove(),600);
+  });
+}
+
+function startGame(){
+  resetGame();
+  start.disabled=true;
+  timeLeft = 20; timeEl.textContent = timeLeft;
+  timer = setInterval(()=> {
+    timeLeft--;
+    timeEl.textContent = timeLeft;
+    if (timeLeft <= 0) endGame();
+  },1000);
+  spawnInterval = setInterval(spawnHeart, 600);
+}
+
+function endGame(){
+  clearInterval(timer); clearInterval(spawnInterval);
+  start.disabled=false;
+  // limpiar corazones
+  Array.from(document.querySelectorAll('.heart')).forEach(n=>n.remove());
+  final.style.display='block';
+  final.innerHTML = `<strong>Resultado:</strong> ${points} puntos.<br><br>Mensaje: Te amo y me gustó jugar contigo ❤️<br><em>PD: Revisa el bolsillo de tu chaqueta</em>`;
+}
+
+function resetGame(){
+  points = 0; pointsEl.textContent = points; final.style.display='none';
+  clearInterval(timer); clearInterval(spawnInterval);
+  Array.from(document.querySelectorAll('.heart')).forEach(n=>n.remove());
+}
+
+start.addEventListener('click', startGame);
+</script>
+</body>
+  </html>
